@@ -1,0 +1,38 @@
+name: Stakeholder backend security checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+  security-events: write
+jobs:
+  backend-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
+      - name: Install backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e "backend[dev]"
+      - name: Ruff lint
+        run: ruff check backend
+      - name: Bandit SAST
+        run: bandit -q -r backend -x backend/.venv
+      - name: Semgrep SAST
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: p/owasp-top-ten
+      - name: Django system checks
+        working-directory: backend
+        env:
+          DJANGO_SECRET_KEY: ci-only-not-a-secret
+          JWT_SIGNING_KEY: ci-only-jwt-key
+          DJANGO_DEBUG: "true"
+          DATABASE_URL: sqlite:///ci.sqlite3
+        run: python manage.py check
