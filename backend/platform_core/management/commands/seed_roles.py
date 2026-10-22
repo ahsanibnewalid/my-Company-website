@@ -4,7 +4,7 @@ ROLES = [
 ("founder_ceo","Founder & CEO","executive-core",["platform.tenants.read","platform.tenants.manage","deployments.request","deployments.authorize"],True),
 ("executive_operations","Executive Operations","executive-core",["platform.tenants.read","reports.read"],True),
 ("board_observer","Board Observer","executive-core",["reports.read"],False),
-("senior_faculty_advisor","Senior Faculty Advisor","tech-rnd",["reviews.approve","security.reports.read"],True),
+("senior_faculty_advisor","Senior Faculty Advisor","tech-rnd",["reviews.read","reviews.approve","security.reports.read"],True),
 ("student_intern","Student Intern","tech-rnd",["sandbox.read","sandbox.write"],False),
 ("software_engineer","Software Engineer","tech-rnd",["sandbox.read","sandbox.write"],False),
 ("security_engineer","Security Engineer","tech-rnd",["security.reports.read","security.scans.run"],False),
