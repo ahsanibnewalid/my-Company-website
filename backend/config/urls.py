@@ -3,6 +3,7 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from platform_core.views import HealthView, MeView, TenantViewSet, SubscriptionViewSet, MFASetupView, MFAVerifyView
+from platform_core.stakeholder_api import FacultyReviewQueueView, InternWorkspaceView, FleetMetricsView, CEOReleaseAuthorizationView
 router = DefaultRouter()
 router.register("tenants", TenantViewSet, basename="tenant")
 router.register("subscriptions", SubscriptionViewSet, basename="subscription")
