@@ -31,3 +31,12 @@ Endpoints include `/api/health/`, `/api/auth/token/`, `/api/auth/token/refresh/`
 - Add API and cross-tenant isolation tests, refresh-token reuse tests, immutable audit DB grants/triggers/WORM export, CI scanners, secret management, backups and restore drills before production.
 - Never expose production credentials, live database access or payment secrets to intern environments.
 - Currency amounts use integer minor units and BDT default. Bangladesh tax handling must be validated by qualified local counsel/accountants; no tax advice is encoded here.
+
+## Stakeholder workflow endpoints
+
+- `GET /api/faculty/reviews/` and `POST /api/faculty/reviews/`: faculty queue and decision recording. Approval is blocked unless SAST and tests are marked passed.
+- `GET /api/intern/workspaces/` and `POST /api/intern/workspaces/`: intern workspace request records, requiring `feature/intern-*` branches and recording production-secret, live-database, and gateway access as false.
+- `GET /api/owner/fleet-metrics/`: platform-superuser view of telemetry snapshots. Metrics are only as trustworthy as their collection source.
+- `POST /api/owner/release-authorization/`: fail-closed placeholder that logs and rejects production authorization until a server-side cryptographic verifier is configured. It never accepts private keys.
+
+These endpoints require migrations for the added models. Run `python manage.py makemigrations platform_core && python manage.py migrate` in a controlled development environment, review the generated migration, then add tests before merging. The new workflow is an initial scanner gate; repository branch protection and mandatory faculty review must still be configured in GitHub settings.
