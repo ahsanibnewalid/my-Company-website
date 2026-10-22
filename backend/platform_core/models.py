@@ -91,3 +91,58 @@ class CodeDeployment(models.Model):
     environment = models.CharField(max_length=20, default="production")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+class FacultyReview(models.Model):
+    class Decision(models.TextChoices):
+        PENDING = "pending", "Pending"
+        APPROVED = "approved", "Approved"
+        CHANGES = "changes_requested", "Changes requested"
+        REJECTED = "rejected", "Rejected"
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    repository = models.CharField(max_length=200)
+    pull_request_number = models.PositiveIntegerField()
+    head_sha = models.CharField(max_length=40)
+    sast_status = models.CharField(max_length=20, default="pending")
+    test_status = models.CharField(max_length=20, default="pending")
+    decision = models.CharField(max_length=20, choices=Decision.choices, default=Decision.PENDING)
+    faculty_reviewer = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True, related_name="faculty_reviews")
+    review_note = models.TextField(blank=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["repository", "pull_request_number", "head_sha"], name="uniq_pr_head_review")]
+        indexes = [models.Index(fields=["decision", "created_at"])]
+
+class InternWorkspace(models.Model):
+    class Status(models.TextChoices):
+        REQUESTED = "requested", "Requested"
+        READY = "ready", "Ready"
+        BLOCKED = "blocked", "Blocked"
+        CLOSED = "closed", "Closed"
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(Tenant, on_delete=models.PROTECT, related_name="intern_workspaces")
+    intern = models.ForeignKey(User, on_delete=models.PROTECT, related_name="intern_workspaces")
+    branch_name = models.CharField(max_length=120)
+    database_label = models.CharField(max_length=120)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.REQUESTED)
+    production_secrets_access = models.BooleanField(default=False)
+    live_database_access = models.BooleanField(default=False)
+    payment_gateway_access = models.BooleanField(default=False)
+    task_title = models.CharField(max_length=200)
+    faculty_feedback = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["tenant", "branch_name"], name="uniq_tenant_intern_branch")]
+        indexes = [models.Index(fields=["intern", "status"])]
+
+class FleetMetric(models.Model):
+    tenant = models.ForeignKey(Tenant, on_delete=models.PROTECT, related_name="fleet_metrics")
+    cpu_percent = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    ram_percent = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    db_connections = models.PositiveIntegerField(null=True, blank=True)
+    db_connection_limit = models.PositiveIntegerField(null=True, blank=True)
+    ssl_expires_at = models.DateTimeField(null=True, blank=True)
+    sampled_at = models.DateTimeField(auto_now_add=True)
+    source = models.CharField(max_length=80, default="unverified")
+    class Meta:
+        indexes = [models.Index(fields=["tenant", "-sampled_at"])]
