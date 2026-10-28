@@ -8,3 +8,12 @@ services:
     startCommand: npm start
     healthCheckPath: /
     autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 24.21.0
+      - key: RESEND_API_KEY
+        sync: false
+      - key: INQUIRY_TO_EMAIL
+        sync: false
+      - key: INQUIRY_FROM_EMAIL
+        sync: false
