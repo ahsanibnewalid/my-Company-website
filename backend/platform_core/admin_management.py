@@ -188,7 +188,7 @@ class AdminMembershipsView(OwnerOperation):
             return Response({"detail": "Owner memberships are not managed here."}, status=403)
         tenant = get_object_or_404(Tenant, pk=data["tenant_id"], status=Tenant.Status.ACTIVE)
         role = get_object_or_404(Role, code=data["role_code"])
-        if role.tier.lower() in {"executive", "owner"} or role.code in {"owner", "ceo"}:
+        if (role.tier.lower().startswith("executive") or role.tier.lower() == "owner") or role.code in {"owner", "ceo"}:
             return Response({"detail": "Cannot assign owner privileges."}, status=403)
         with transaction.atomic():
             if not role.code.startswith("client_") and not user.mfa_required:

@@ -143,6 +143,10 @@ class PredefinedAdminTests(TestCase):
             "role_code": "founder_ceo",
         }, format="json")
         self.assertEqual(rejected.status_code, 403)
+        self.assertEqual(self.api.post("/api/admin/users/", {
+            "email": "elevated@example.com", "tenant_id": str(self.tenant.pk),
+            "role_code": "founder_ceo",
+        }, format="json").status_code, 403)
         assigned = self.api.post("/api/admin/memberships/", {
             "user_id": str(user.pk), "tenant_id": str(self.tenant.pk),
             "role_code": "customer_success",
