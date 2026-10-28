@@ -122,3 +122,19 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--purple);outline-off
 .admin-operations .btn{flex-shrink:0}
 @media(max-width:1150px){.admin-layout-grid{grid-template-columns:1fr}}
 @media(max-width:700px){.admin-assignment,.admin-form-row{grid-template-columns:1fr}.admin-operations{align-items:start;flex-direction:column}.admin-line{flex-wrap:wrap}.admin-line select{max-width:100%}}
+
+/* Small, single-owner management dashboard */
+.owner-nav{display:flex;align-items:center;gap:11px;width:100%;background:transparent;border:1px solid transparent;padding:12px 13px;text-align:left;border-radius:11px;color:#a8b3c7;font:inherit;font-size:13px;cursor:pointer}
+.owner-nav:hover,.owner-nav.selected{border-color:#8067d64a;background:#8067d617;color:#ded4ff}
+.owner-panel-heading,.owner-item-head{display:flex;align-items:start;justify-content:space-between;gap:20px}
+.owner-panel-heading h2,.portal-panel>h2{font-size:19px;margin:0 0 9px}.owner-panel-heading p,.portal-panel>p{color:#98a2b7;font-size:12px;line-height:1.8}
+.owner-panel-heading select,.owner-item-head select,.owner-form input,.owner-form select,.owner-form textarea{border:1px solid #303a4d;border-radius:9px;background:#090d17;color:#f2f5fc;padding:11px;font-size:12px;max-width:100%}
+.owner-items{display:grid;gap:14px;margin-top:18px}.owner-item{padding:19px;border:1px solid #30394b;background:#0c111c;border-radius:13px;min-width:0}
+.owner-item h3{font-size:17px;margin:7px 0}.owner-item a{color:#baa8ff;overflow-wrap:anywhere}.owner-item small{color:#98a2b7;font-size:11px;display:block;margin-top:8px}
+.owner-item p{color:#bac3d2;font-size:12px;line-height:1.8;overflow-wrap:anywhere}.owner-message{white-space:pre-wrap;border-top:1px solid #2d3546;padding-top:13px}
+.owner-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:17px}.owner-actions .btn{font-size:11px;padding:10px 14px}.owner-actions button:disabled{opacity:.5}
+.owner-form{display:grid;gap:17px;margin-top:23px}.owner-form label{display:grid;gap:8px;color:#abb6c9;font-size:12px}.owner-form input,.owner-form select,.owner-form textarea{width:100%}
+.owner-form textarea{resize:vertical}.owner-two-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}.owner-form .owner-check{display:flex;align-items:center;gap:10px}.owner-check input{width:16px;height:16px;accent-color:#a78bfa}
+.owner-sections{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}.owner-sections .portal-panel{margin:0}
+@media(max-width:1050px){.owner-sections{grid-template-columns:1fr}}
+@media(max-width:700px){.owner-nav{width:auto;padding:9px;font-size:11px}.owner-panel-heading,.owner-item-head{flex-direction:column}.owner-two-cols{grid-template-columns:1fr}.owner-sections{grid-template-columns:1fr}.portal-sidebar .portal-side-details{display:none}}

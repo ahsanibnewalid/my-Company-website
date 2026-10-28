@@ -1,12 +1,10 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { ADMIN_COOKIE, validAdminSession } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminEntryPage() {
-  const session = await cookies();
-  // Any session goes to the dashboard, where Django verifies the owner allowlist.
-  // Without a session, render the dedicated owner sign-in.
-  const hasSession = session.has("axiom_access") || session.has("axiom_refresh");
-  redirect(hasSession ? "/admin/dashboard" : "/admin/login");
+  const cookieJar = await cookies();
+  redirect(validAdminSession(cookieJar.get(ADMIN_COOKIE)?.value) ? "/admin/dashboard" : "/admin/login");
 }
