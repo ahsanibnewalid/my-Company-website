@@ -11,7 +11,11 @@ services:
     envVars:
       - key: NODE_VERSION
         value: 24.21.0
-      - key: DJANGO_API_URL
+      - key: DATABASE_URL
         sync: false
-      - key: WEBSITE_SUBMISSION_KEY
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD_HASH
+        sync: false
+      - key: SESSION_SECRET
         sync: false
