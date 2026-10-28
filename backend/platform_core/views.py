@@ -35,22 +35,3 @@ class SubscriptionViewSet(viewsets.ReadOnlyModelViewSet):
         if membership is None:
             return Subscription.objects.none()
         return Subscription.objects.filter(tenant_id=membership.tenant_id).order_by("-created_at")
-class MFASetupView(APIView):
-    permission_classes = [IsAuthenticated]
-    def post(self, request):
-        device = TOTPDevice.objects.filter(user=request.user, confirmed=False, name="primary").first()
-        if not device:
-            device = TOTPDevice.objects.create(user=request.user, name="primary", confirmed=False)
-        return Response({"provisioning_uri": device.config_url})
-class MFAVerifyView(APIView):
-    permission_classes = [IsAuthenticated]
-    def post(self, request):
-        token = str(request.data.get("token", ""))
-        device = TOTPDevice.objects.filter(user=request.user, name="primary").first()
-        if not device or not device.verify_token(token):
-            return Response({"detail": "Invalid MFA token."}, status=status.HTTP_400_BAD_REQUEST)
-        if not device.confirmed:
-            device.confirmed = True
-            device.save(update_fields=["confirmed"])
-        AuditLog.objects.create(actor=request.user, action="auth.mfa.verified", target_type="user", target_id=str(request.user.pk))
-        return Response({"mfa_enabled": True})

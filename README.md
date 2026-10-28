@@ -49,19 +49,25 @@ npm run build
 
 GitHub Actions runs these checks on pull requests and pushes to `main`.
 
+## Authenticated company portal
+
+The repository now includes an owner/staff/client portal at `/login` and `/portal`. The previously fictional `/admin` Next.js dashboard redirects to the authenticated portal. The separate Django admin at `http://localhost:8000/admin/` is protected with TOTP and manages accounts, roles and actual tenant records.
+
+For complete local setup, account provisioning, security boundaries and production prerequisites, read [backend/README.md](backend/README.md). **The live portal requires a running Django service and database**. Configure `DJANGO_API_URL` privately in Render after deploying the API; no account passwords or secrets are committed.
+
 ## Role-specific status
 
 | Audience | Current experience | Not yet implemented |
 | --- | --- | --- |
-| Prospective client | Browse services and submit a project inquiry | Authenticated workspace, project tracking, subscriptions, invoices |
-| Faculty / student candidate | Select a track and send an application | Hiring pipeline, secure uploads, candidate accounts |
-| Owner / staff | Explore a local dashboard with clearly fictional data; API scaffold in `backend/` | Production RBAC dashboard, audited actions, team invitations, real CRM |
+| Prospective client | Browse services, submit a project inquiry, and sign in to an assigned tenant for projects/support | Payments, invoices, self-service invitations |
+| Faculty / student candidate | Select a track and send an application; provisioned staff can sign in with role permissions | Hiring pipeline, secure uploads |
+| Owner / staff | MFA-gated owner login, role-scoped team workspaces, real project and ticket APIs | Managed production DB and hosting, invitations, immutable audit, financial integrations |
 
 The architecture cards and proposed 16-role operating blueprint describe plans, **not verified deployed controls, signed customers or active employees**. Company-name, legal and Bangladesh tax references require owner confirmation.
 
 ## Backend foundation
 
-See [backend/README.md](backend/README.md). The Django REST Framework starter models identity, tenants, memberships, subscriptions and audit logs but needs initial migrations, MFA enforcement on token issuance, tenant-scoped access tests, a hardened deployment, and other controls before serving real customers. Do not expose it as a production authentication service in its current state.
+See [backend/README.md](backend/README.md). The Django REST Framework backend now implements MFA-gated token issuance, role permissions, tenant-scoped projects/support and authorization tests. It still requires reviewed migrations, production database hosting, operational controls and secret configuration before serving real customers.
 
 ## Launch checklist
 

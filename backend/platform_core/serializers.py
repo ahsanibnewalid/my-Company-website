@@ -14,6 +14,9 @@ class MeSerializer(serializers.ModelSerializer):
     memberships = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = ["id", "email", "first_name", "last_name", "mfa_required", "memberships"]
+        fields = ["id", "email", "first_name", "last_name", "is_owner", "mfa_required", "memberships"]
+    is_owner = serializers.SerializerMethodField()
+    def get_is_owner(self, user):
+        return user.is_superuser
     def get_memberships(self, user):
-        return [{"tenant_id": str(m.tenant_id), "tenant": m.tenant.name, "role": m.role.code, "permissions": m.role.permissions} for m in Membership.objects.select_related("tenant", "role").filter(user=user, is_active=True)]
+        return [{"tenant_id": str(m.tenant_id), "tenant": m.tenant.name, "role": m.role.code, "permissions": m.role.permissions} for m in Membership.objects.select_related("tenant", "role").filter(user=user, is_active=True, tenant__status="active")]

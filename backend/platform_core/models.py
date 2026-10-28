@@ -91,3 +91,43 @@ class CodeDeployment(models.Model):
     environment = models.CharField(max_length=20, default="production")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class Project(models.Model):
+    class Status(models.TextChoices):
+        PLANNING = "planning", "Planning"
+        ACTIVE = "active", "Active"
+        ON_HOLD = "on_hold", "On hold"
+        COMPLETED = "completed", "Completed"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(Tenant, on_delete=models.PROTECT, related_name="projects")
+    name = models.CharField(max_length=180)
+    description = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PLANNING)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [models.Index(fields=["tenant", "status"])]
+
+
+class SupportTicket(models.Model):
+    class Status(models.TextChoices):
+        OPEN = "open", "Open"
+        IN_PROGRESS = "in_progress", "In progress"
+        RESOLVED = "resolved", "Resolved"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(Tenant, on_delete=models.PROTECT, related_name="support_tickets")
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="support_tickets")
+    subject = models.CharField(max_length=180)
+    message = models.TextField()
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.OPEN)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [models.Index(fields=["tenant", "status"])]

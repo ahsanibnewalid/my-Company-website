@@ -1,0 +1,35 @@
+name: Backend authentication and tenant safety
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  django:
+    runs-on: ubuntu-latest
+    env:
+      DJANGO_DEBUG: "true"
+      DJANGO_SECRET_KEY: "ci-only-secret-key-do-not-use-in-production-123456"
+      JWT_SIGNING_KEY: "ci-only-separate-jwt-signing-key-123456"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,testserver"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Django backend dependencies
+        run: python -m pip install -e './backend[dev]'
+      - name: Show initial migration for review
+        run: python backend/manage.py makemigrations platform_core --dry-run --verbosity 3
+      - name: Prepare test database
+        run: |
+          python backend/manage.py makemigrations platform_core --noinput
+          python backend/manage.py migrate --noinput
+      - name: Validate configuration
+        run: python backend/manage.py check
+      - name: Auth, MFA and cross-tenant tests
+        run: python backend/manage.py test platform_core -v 2
