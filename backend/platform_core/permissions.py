@@ -1,4 +1,4 @@
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import BasePermission, IsAuthenticated
 from .models import Membership
 class HasTenantPermission(BasePermission):
     def has_permission(self, request, view):
@@ -17,3 +17,20 @@ class HasTenantPermission(BasePermission):
 class IsPlatformExecutive(BasePermission):
     def has_permission(self, request, view):
         return bool(request.user and request.user.is_authenticated and request.user.is_superuser)
+
+
+def requires_mfa(user):
+    return bool(
+        user.is_superuser or user.is_staff or user.mfa_required
+        or Membership.objects.filter(user=user, is_active=True, role__is_privileged=True).exists()
+    )
+
+
+class IsPortalAuthenticated(IsAuthenticated):
+    """A fresh MFA-verified token is required whenever an account becomes privileged."""
+
+    def has_permission(self, request, view):
+        if not super().has_permission(request, view):
+            return False
+        verified = bool(getattr(request, "auth", None) and request.auth.get("mfa_verified", False))
+        return not requires_mfa(request.user) or verified

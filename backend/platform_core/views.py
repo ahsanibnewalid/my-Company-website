@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Tenant, Subscription, AuditLog
-from .permissions import HasTenantPermission, IsPlatformExecutive
+from .permissions import HasTenantPermission, IsPlatformExecutive, IsPortalAuthenticated
 from .serializers import TenantSerializer, SubscriptionSerializer, MeSerializer
 class HealthView(APIView):
     permission_classes = [AllowAny]
@@ -19,16 +19,16 @@ class HealthView(APIView):
         except Exception:
             return Response({"status": "degraded"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 class MeView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsPortalAuthenticated]
     def get(self, request):
         return Response(MeSerializer(request.user).data)
 class TenantViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = TenantSerializer
-    permission_classes = [IsAuthenticated, IsPlatformExecutive]
+    permission_classes = [IsPortalAuthenticated, IsPlatformExecutive]
     queryset = Tenant.objects.all().order_by("name")
 class SubscriptionViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = SubscriptionSerializer
-    permission_classes = [IsAuthenticated, HasTenantPermission]
+    permission_classes = [IsPortalAuthenticated, HasTenantPermission]
     required_permission = "billing.subscriptions.read"
     def get_queryset(self):
         membership = getattr(self.request, "tenant_membership", None)

@@ -1,30 +1,35 @@
 """Password + TOTP issuance. No password tokens are issued by the default SimpleJWT view."""
+import hashlib
 from django.contrib.auth import authenticate
 from django.db import transaction
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.throttling import ScopedRateThrottle
+from rest_framework.throttling import ScopedRateThrottle, SimpleRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import AuditLog, Membership
+from .permissions import requires_mfa
 from .serializers import MeSerializer
 
 
-def requires_mfa(user):
-    return bool(
-        user.is_superuser or user.is_staff or user.mfa_required
-        or Membership.objects.filter(user=user, is_active=True, role__is_privileged=True).exists()
-    )
+class LoginEmailThrottle(SimpleRateThrottle):
+    """Rate limit by hashed login identity; BFF requests otherwise share a proxy IP."""
+    scope = "login"
+
+    def get_cache_key(self, request, view):
+        supplied = request.data.get("email", "") if isinstance(request.data, dict) else ""
+        email = str(supplied).strip().lower()[:254]
+        identity = hashlib.sha256(email.encode("utf-8")).hexdigest()
+        return self.cache_format % {"scope": self.scope, "ident": identity}
 
 
 class LoginView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
-    throttle_classes = [ScopedRateThrottle]
-    throttle_scope = "login"
+    throttle_classes = [LoginEmailThrottle]
 
     def post(self, request):
         email = str(request.data.get("email", "")).strip().lower()
@@ -55,6 +60,7 @@ class LoginView(APIView):
                     return Response(invalid, status=status.HTTP_401_UNAUTHORIZED)
 
         refresh = RefreshToken.for_user(user)
+        refresh["mfa_verified"] = requires_mfa(user)
         AuditLog.objects.create(
             actor=user, action="auth.portal.login", target_type="user", target_id=str(user.pk)
         )

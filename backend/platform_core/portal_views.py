@@ -3,11 +3,11 @@ import uuid
 from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import AuditLog, Membership, Project, Subscription, SupportTicket, Tenant, User
+from .permissions import IsPortalAuthenticated
 
 
 def tenant_id_from_request(request):
@@ -40,7 +40,7 @@ def authorized_tenant(request, permission=None):
 
 
 class PortalOverviewView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsPortalAuthenticated]
 
     def get(self, request):
         if request.user.is_superuser:
@@ -83,7 +83,7 @@ class PortalOverviewView(APIView):
 
 
 class ProjectsView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsPortalAuthenticated]
 
     def get(self, request):
         tenant, _ = authorized_tenant(request, "portal.projects.read")
@@ -116,7 +116,7 @@ class ProjectsView(APIView):
 
 
 class TicketsView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsPortalAuthenticated]
 
     def get(self, request):
         tenant, membership = authorized_tenant(request, "portal.tickets.read")
@@ -151,7 +151,7 @@ class TicketsView(APIView):
 
 
 class TicketDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsPortalAuthenticated]
 
     def patch(self, request, pk):
         tenant, _ = authorized_tenant(request, "portal.tickets.manage")

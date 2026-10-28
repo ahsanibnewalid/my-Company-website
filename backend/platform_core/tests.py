@@ -106,3 +106,27 @@ class PortalAuthTests(TestCase):
 
     def test_invalid_login(self):
         self.assertEqual(self.login("client@example.com", "wrong-password").status_code, 401)
+
+    def test_refresh_token_is_revoked_on_logout(self):
+        login = self.login("client@example.com", "ClientPasswordForTests123!")
+        self.assertEqual(login.status_code, 200)
+        response = self.client_api.post("/api/auth/logout/", {
+            "refresh": login.data["refresh"]
+        }, format="json")
+        self.assertEqual(response.status_code, 200)
+        refresh = self.client_api.post("/api/auth/token/refresh/", {
+            "refresh": login.data["refresh"]
+        }, format="json")
+        self.assertEqual(refresh.status_code, 401)
+
+    def test_login_throttle_is_per_account_not_shared_proxy(self):
+        self.assertEqual(self.login("client@example.com", "wrong-password").status_code, 401)
+        self.assertEqual(self.login("staff@example.com", "StaffPasswordForTests123!").status_code, 200)
+
+    def test_mfa_required_after_role_change_revokes_plain_session_access(self):
+        token = self.login("client@example.com", "ClientPasswordForTests123!").data["access"]
+        self.authorize(token)
+        self.client_user.mfa_required = True
+        self.client_user.save(update_fields=["mfa_required"])
+        response = self.client_api.get("/api/portal/overview/")
+        self.assertEqual(response.status_code, 403)

@@ -56,7 +56,7 @@ GitHub Actions checks authentication, TOTP enforcement and tenant scoping. The i
 ## Production activation — required
 
 1. Provision an independent PostgreSQL database and durable backups.
-2. Deploy the Django backend with `DJANGO_DEBUG=false`, distinct high-entropy signing secrets, `DATABASE_URL`, correct `DJANGO_ALLOWED_HOSTS`, and HTTPS.
+2. Optionally use [deploy/render-api.yaml](../deploy/render-api.yaml) as a separate Render Blueprint (it does not create a database). Deploy the Django backend with `DJANGO_DEBUG=false`, distinct high-entropy signing secrets, `DATABASE_URL`, correct `DJANGO_ALLOWED_HOSTS`, and HTTPS.
 3. Apply reviewed migrations, seed roles, create the owner superuser and enroll TOTP through a private management console.
 4. Configure the Next.js hosting service with `DJANGO_API_URL=https://<your-api-host>`. Never use a `NEXT_PUBLIC_` prefix for the API credential path.
 5. Confirm cookie delivery, sign-in, logout, token refresh, tenant isolation, and project/ticket flows on the deployment.

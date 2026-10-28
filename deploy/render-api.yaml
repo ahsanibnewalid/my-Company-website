@@ -1,0 +1,29 @@
+# Optional separate Render Blueprint for the Django API.
+# Do not connect it until a production PostgreSQL database and secrets exist.
+services:
+  - type: web
+    name: axiom-labs-api
+    runtime: python
+    plan: free
+    branch: main
+    buildCommand: pip install -e ./backend && python backend/manage.py collectstatic --noinput
+    startCommand: python backend/manage.py migrate --noinput && gunicorn --chdir backend config.wsgi:application --bind 0.0.0.0:$PORT
+    healthCheckPath: /api/health/
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.9
+      - key: DJANGO_DEBUG
+        value: "false"
+      - key: SECURE_SSL_REDIRECT
+        value: "true"
+      - key: DJANGO_SECRET_KEY
+        sync: false
+      - key: JWT_SIGNING_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: DJANGO_ALLOWED_HOSTS
+        sync: false
+      - key: DJANGO_CSRF_TRUSTED_ORIGINS
+        sync: false
