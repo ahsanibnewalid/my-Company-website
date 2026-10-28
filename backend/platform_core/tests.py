@@ -1,11 +1,12 @@
 import pyotp
 from django.core.cache import cache
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from rest_framework.test import APIClient
 from platform_core.models import Membership, Project, Role, SupportTicket, Tenant, User
 
 
+@override_settings(ADMIN_ALLOWED_EMAILS={"owner@example.com"})
 class PortalAuthTests(TestCase):
     def setUp(self):
         cache.clear()  # Isolate login throttle state across tests.
@@ -51,7 +52,9 @@ class PortalAuthTests(TestCase):
     def test_owner_requires_valid_totp(self):
         self.assertEqual(self.login("owner@example.com", "OwnerPasswordForTests123!").status_code, 401)
         token = pyotp.parse_uri(self.owner_device.config_url).now()
-        response = self.login("owner@example.com", "OwnerPasswordForTests123!", otp=token)
+        response = self.client_api.post("/api/auth/admin/token/", {
+            "email": "owner@example.com", "password": "OwnerPasswordForTests123!", "otp": token
+        }, format="json")
         self.assertEqual(response.status_code, 200)
         self.authorize(response.data["access"])
         overview = self.client_api.get("/api/portal/overview/")

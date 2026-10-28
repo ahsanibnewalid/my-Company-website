@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from .models import Membership
 class HasTenantPermission(BasePermission):
@@ -14,9 +15,18 @@ class HasTenantPermission(BasePermission):
         request.tenant_membership = membership
         request.tenant = membership.tenant
         return permission_code in membership.role.permissions
+def is_predefined_admin(user):
+    """Fail closed: both a privileged account and explicit email approval are required."""
+    return bool(
+        user and user.is_authenticated and user.is_active
+        and user.is_superuser and user.is_staff
+        and user.email.strip().lower() in settings.ADMIN_ALLOWED_EMAILS
+    )
+
+
 class IsPlatformExecutive(BasePermission):
     def has_permission(self, request, view):
-        return bool(request.user and request.user.is_authenticated and request.user.is_superuser)
+        return is_predefined_admin(request.user)
 
 
 def requires_mfa(user):

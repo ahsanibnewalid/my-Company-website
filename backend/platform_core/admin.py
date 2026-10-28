@@ -1,12 +1,18 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django_otp.admin import OTPAdminSite
+from .permissions import is_predefined_admin
 from .models import (
     User, Tenant, Role, Membership, Subscription, AuditLog,
     CodeDeployment, Project, SupportTicket, PublicInquiry,
 )
 
-otp_admin_site = OTPAdminSite(OTPAdminSite.name)
+class OwnerOnlyAdminSite(OTPAdminSite):
+    def has_permission(self, request):
+        return super().has_permission(request) and is_predefined_admin(request.user)
+
+
+otp_admin_site = OwnerOnlyAdminSite(OTPAdminSite.name)
 otp_admin_site.site_header = "Axiom Labs — verified administration"
 otp_admin_site.site_title = "Axiom Labs Admin"
 otp_admin_site.index_title = "Company operations"

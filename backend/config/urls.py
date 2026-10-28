@@ -4,7 +4,8 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 from platform_core.admin import otp_admin_site
 from platform_core.inquiry_views import CompanyInquiryDetailView, CompanyInquiryListView, PublicInquirySubmissionView
-from platform_core.auth_views import LoginView, LogoutView
+from platform_core.auth_views import AdminLoginView, LoginView, LogoutView
+from platform_core.admin_management import (AdminOverviewView, AdminTenantsView, AdminTenantDetailView, AdminUsersView, AdminUserDetailView, AdminMembershipsView)
 from platform_core.portal_views import PortalOverviewView, ProjectsView, TicketsView, TicketDetailView
 from platform_core.views import HealthView, MeView, TenantViewSet, SubscriptionViewSet
 
@@ -20,10 +21,17 @@ urlpatterns = [
     path("api/portal/inquiries/<uuid:pk>/", CompanyInquiryDetailView.as_view()),
     path("api/", include(router.urls)),
     path("api/auth/token/", LoginView.as_view()),
+    path("api/auth/admin/token/", AdminLoginView.as_view()),
     path("api/auth/token/refresh/", TokenRefreshView.as_view()),
     path("api/auth/logout/", LogoutView.as_view()),
     path("api/auth/me/", MeView.as_view()),
     path("api/portal/overview/", PortalOverviewView.as_view()),
+    path("api/admin/overview/", AdminOverviewView.as_view()),
+    path("api/admin/tenants/", AdminTenantsView.as_view()),
+    path("api/admin/tenants/<uuid:pk>/", AdminTenantDetailView.as_view()),
+    path("api/admin/users/", AdminUsersView.as_view()),
+    path("api/admin/users/<uuid:pk>/", AdminUserDetailView.as_view()),
+    path("api/admin/memberships/", AdminMembershipsView.as_view()),
     path("api/portal/projects/", ProjectsView.as_view()),
     path("api/portal/tickets/", TicketsView.as_view()),
     path("api/portal/tickets/<uuid:pk>/", TicketDetailView.as_view()),

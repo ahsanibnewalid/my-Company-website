@@ -34,16 +34,16 @@ export default function LoginPage() {
       <Link href="/" className="auth-brand">✦ axiom<span>labs</span></Link>
       <div><div className="eyebrow">SECURE COMPANY WORKSPACE</div>
         <h1>One sign-in.<br/><span className="gradient-text">The right access.</span></h1>
-        <p>Owners, assigned team members, and clients each see only the workspaces and tools permitted by their account.</p>
+        <p>Assigned team members and clients see only the workspaces and tools permitted by their account.</p>
         <div className="auth-points"><span><ShieldCheck size={18}/> Server-verified roles</span><span><LockKeyhole size={18}/> Private session cookies</span></div>
       </div>
       <small>Access is invitation-only. A company administrator provisions accounts.</small>
     </div>
     <div className="auth-form-wrap"><section className="auth-card" aria-labelledby="sign-in-title">
       <div className="auth-card-icon"><LockKeyhole size={22}/></div>
-      <div className="eyebrow">OWNER · STAFF · CLIENT</div>
+      <div className="eyebrow">STAFF · CLIENT</div>
       <h2 id="sign-in-title">Sign in to Axiom Labs</h2>
-      <p>Enter the email and password assigned to your account. Owners and privileged staff must also use an authenticator code.</p>
+      <p>Enter the email and password assigned to your account. Privileged team members must also use an authenticator code.</p>
       <form onSubmit={submit} className="auth-form">
         <label>Work email<input type="email" autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)} required maxLength={254} placeholder="you@company.com"/></label>
         <label>Password<input type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} required placeholder="Your account password"/></label>
@@ -52,7 +52,7 @@ export default function LoginPage() {
         <button className="btn btn-primary auth-submit" type="submit" disabled={busy}>{busy?"Verifying…":"Sign in securely"} <ArrowRight size={16}/></button>
       </form>
       <p className="auth-help">Need an account or MFA enrollment? Contact your company administrator. Never share your password or one-time code.</p>
-      <Link className="auth-return" href="/">← Back to company website</Link>
+      <Link className="auth-return" href="/">← Back to company website</Link><p className="auth-help"><Link href="/admin/login">Predefined administrator sign-in</Link></p>
     </section></div>
   </div></main>;
 }

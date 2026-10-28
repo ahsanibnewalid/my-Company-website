@@ -5,7 +5,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 from platform_core.models import AuditLog, PublicInquiry, User
 
 
-@override_settings(WEBSITE_SUBMISSION_KEY="test-only-shared-submission-secret")
+@override_settings(WEBSITE_SUBMISSION_KEY="test-only-shared-submission-secret", ADMIN_ALLOWED_EMAILS={"owner@example.com"})
 class PublicInquiryTests(TestCase):
     def setUp(self):
         self.client_api = APIClient()

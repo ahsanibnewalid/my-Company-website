@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import AuditLog, Membership, Project, PublicInquiry, Subscription, SupportTicket, Tenant, User
-from .permissions import IsPortalAuthenticated
+from .permissions import IsPortalAuthenticated, is_predefined_admin
 
 
 def tenant_id_from_request(request):
@@ -31,7 +31,9 @@ def authorized_tenant(request, permission=None):
     tenant_id = tenant_id_from_request(request)
     if not tenant_id:
         return None, None
-    if request.user.is_superuser:
+    if request.user.is_superuser and not is_predefined_admin(request.user):
+        return None, None
+    if is_predefined_admin(request.user):
         return Tenant.objects.filter(pk=tenant_id, status=Tenant.Status.ACTIVE).first(), None
     membership = membership_for(request, tenant_id)
     if not membership or (permission and permission not in membership.role.permissions):
@@ -43,7 +45,9 @@ class PortalOverviewView(APIView):
     permission_classes = [IsPortalAuthenticated]
 
     def get(self, request):
-        if request.user.is_superuser:
+        if request.user.is_superuser and not is_predefined_admin(request.user):
+            return Response({"detail": "Administrator is not approved."}, status=403)
+        if is_predefined_admin(request.user):
             tenants = Tenant.objects.order_by("-created_at")
             return Response({
                 "persona": "owner",
