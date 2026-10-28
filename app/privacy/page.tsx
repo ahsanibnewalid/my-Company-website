@@ -3,24 +3,24 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Privacy & inquiries",
-  description: "How the Axiom Labs website handles project inquiries and career application messages.",
+  description: "How Axiom Labs handles project inquiries and career applications.",
 };
 
 export default function PrivacyPage() {
   return <main className="privacy-page"><div className="wrap"><article className="privacy-card">
     <Link href="/">← Return to Axiom Labs</Link>
     <h1>Privacy & inquiry information</h1>
-    <p>This page explains how the website's contact and career application forms work. It is a limited technical disclosure, not a substitute for a verified company-wide privacy policy.</p>
+    <p>This page explains how our contact and career application forms work. It is a technical disclosure, not a substitute for a verified company-wide privacy policy.</p>
     <h2>Information you choose to send</h2>
-    <p>When you submit a form, we receive your name, email address, message and, when relevant, company name or application track. Please do not send passwords, identification documents, financial account details or confidential business data.</p>
+    <p>When you submit a form, we store your name, email, message, and, when relevant, your organization or application track. A submission timestamp records your consent. Please do not send passwords, identification documents, financial account details or confidential business data.</p>
     <h2>Why and how it is used</h2>
-    <p>The information is used to review your inquiry and, where appropriate, reply. The website validates it on the server and uses Resend to forward it to the configured company inbox. Its email provider and mailbox host may process and retain copies under their respective terms. The website does not add inquiries to a customer database or advertising list.</p>
-    <h2>When delivery is unavailable</h2>
-    <p>If the company inbox or sending provider has not been configured, the form displays an error and does not claim your message was sent. You may try again later.</p>
+    <p>Your information is stored in the company's backend database to review your inquiry and, where appropriate, contact you. Only authenticated company administrators with the required permissions can review the submission queue. We no longer forward submissions through an email delivery provider. The forms do not create client accounts or advertising subscriptions.</p>
+    <h2>When saving is unavailable</h2>
+    <p>If the backend or its database is not configured or reachable, the form shows an error and does not claim that the request was saved. Keep a copy of your message and try again later.</p>
     <h2>Retention, access and deletion</h2>
-    <p>A specific retention period and dedicated privacy contact are not published yet. These must be established by the company before a full public launch. If the company replies to your message, you can request deletion or access by replying to that conversation.</p>
+    <p>A company-specific retention period and a dedicated privacy contact still need to be established before full public launch. An administrator can review or delete records through the restricted backend administration interface. For access or deletion requests, use a published company contact channel once available.</p>
     <h2>Technical safeguards</h2>
-    <p>Form submission uses HTTPS on properly configured hosting, length checks, a basic abuse throttle and an email delivery provider. These safeguards do not guarantee absolute security. The site's demo client and owner views do not accept real account logins.</p>
+    <p>Submissions use HTTPS on correctly configured hosting, form validation, an internal shared secret between the website and backend, and basic rate limiting. These are not guarantees of absolute security; further monitoring and managed abuse protection are needed for production.</p>
     <p style={{ marginTop: 28 }}><Link href="/#contact">Return to the contact form</Link></p>
   </article></div></main>;
 }

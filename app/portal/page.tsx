@@ -9,6 +9,7 @@ type Overview = { persona: "owner"|"staff"|"client"; summary: Record<string, num
 type Account = { email: string; first_name: string; last_name: string; is_owner: boolean };
 type Project = { id: string; name: string; description: string; status: string; updated_at: string };
 type Ticket = { id: string; subject: string; message: string; status: string; created_at: string };
+type Inquiry = { id: string; kind: "project"|"career"; name: string; email: string; organization: string; track: string; message: string; status: "new"|"reviewing"|"closed"; created_at: string };
 
 async function readJson<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(url, { cache: "no-store", ...options });
@@ -24,6 +25,8 @@ export default function PortalPage() {
   const [selected, setSelected] = useState("");
   const [projects, setProjects] = useState<Project[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+  const [inquiryTotal, setInquiryTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loadingWorkspace, setLoadingWorkspace] = useState(false);
   const [error, setError] = useState("");
@@ -40,7 +43,14 @@ export default function PortalPage() {
       try {
         const overviewData = await readJson<Overview>("/api/portal/overview");
         const user = await readJson<Account>("/api/portal/me");
+        const incoming = overviewData.persona === "owner"
+          ? await readJson<{ total: number; inquiries: Inquiry[] }>("/api/portal/inquiries").catch((cause: unknown) => {
+              if (active) setError(cause instanceof Error ? `Inquiry queue: ${cause.message}` : "Inquiry queue unavailable.");
+              return null;
+            }) : null;
         if (active) {
+          setInquiries(incoming?.inquiries || []);
+          setInquiryTotal(incoming?.total || 0);
           setOverview(overviewData); setAccount(user);
           setSelected(overviewData.workspaces.find(w => w.status === "active")?.id || "");
         }
@@ -110,6 +120,18 @@ export default function PortalPage() {
     }catch(cause){setError(cause instanceof Error?cause.message:"Could not update request.");}
   }
 
+  async function updateInquiry(inquiry: Inquiry, status: Inquiry["status"]) {
+    setError(""); setNotice("");
+    try {
+      await readJson("/api/portal/inquiries/" + inquiry.id, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      setInquiries(current => current.map(item => item.id === inquiry.id ? { ...item, status } : item));
+      setNotice("Inquiry status updated.");
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "Could not update inquiry."); }
+  }
+
   async function logout(){
     await fetch("/api/auth/logout",{method:"POST"}).catch(()=>undefined);
     window.location.assign("/login");
@@ -144,6 +166,22 @@ export default function PortalPage() {
           <div><Users/><strong>{overview.summary.users??0}</strong><span>Users</span></div>
           <div><BriefcaseBusiness/><strong>{overview.summary.projects??0}</strong><span>Projects</span></div>
         </div>}
+
+        {overview.persona==="owner"&&<section className="portal-panel">
+          <div className="portal-heading"><div><h2><ClipboardList size={19}/> Incoming inquiries & applications</h2>
+            <p>Private submissions saved in the company database, without an email provider.</p></div>
+            <span className="portal-pill">{inquiryTotal} total · {inquiries.filter(item=>item.status==="new").length} new in latest 100</span>
+          </div>
+          {inquiries.length?<ul className="portal-item-list">{inquiries.map(item=><li key={item.id}>
+            <b>{item.kind==="career"?"Career application":"Project inquiry"} · {item.name}</b>
+            <small>{item.email} · {item.track||item.organization||"Individual"} · {new Date(item.created_at).toLocaleDateString()}</small>
+            <p>{item.message}</p>
+            <select aria-label={`Status for ${item.name}`} value={item.status} onChange={event=>void updateInquiry(item,event.target.value as Inquiry["status"])}>
+              <option value="new">New</option><option value="reviewing">Reviewing</option><option value="closed">Closed</option>
+            </select>
+          </li>)}</ul>:<p className="portal-empty-inline">No project inquiries or applications received yet.</p>}
+          {inquiryTotal>100&&<p className="portal-empty-inline">Showing the latest 100 submissions. The protected Django admin provides the full history.</p>}
+        </section>}
 
         <div className="portal-panel">
           <div className="portal-heading"><div><h2>Organization</h2><p>{overview.persona==="owner"?"Select an active organization to manage its work.":"Choose one of your assigned workspaces."}</p></div><span className="portal-pill">{overview.workspaces.length} available</span></div>

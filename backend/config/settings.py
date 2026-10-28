@@ -53,3 +53,6 @@ SECURE_REFERRER_POLICY = "same-origin"
 SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
 REST_FRAMEWORK = {"DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework_simplejwt.authentication.JWTAuthentication"], "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"], "DEFAULT_THROTTLE_CLASSES": ["rest_framework.throttling.AnonRateThrottle", "rest_framework.throttling.UserRateThrottle"], "DEFAULT_THROTTLE_RATES": {"anon": "30/min", "user": "120/min", "login": "5/min", "logout": "30/min"}}
 SIMPLE_JWT = {"ACCESS_TOKEN_LIFETIME": timedelta(minutes=env.int("ACCESS_TOKEN_MINUTES", default=10)), "REFRESH_TOKEN_LIFETIME": timedelta(days=env.int("REFRESH_TOKEN_DAYS", default=7)), "ROTATE_REFRESH_TOKENS": True, "BLACKLIST_AFTER_ROTATION": True, "UPDATE_LAST_LOGIN": True, "ALGORITHM": "HS256", "SIGNING_KEY": env("JWT_SIGNING_KEY"), "AUTH_HEADER_TYPES": ("Bearer",), "CHECK_USER_IS_ACTIVE": True}
+
+# Shared server-to-server secret; never expose it in NEXT_PUBLIC_ variables.
+WEBSITE_SUBMISSION_KEY = env("WEBSITE_SUBMISSION_KEY", default="")

@@ -13,9 +13,5 @@ services:
         value: 24.21.0
       - key: DJANGO_API_URL
         sync: false
-      - key: RESEND_API_KEY
-        sync: false
-      - key: INQUIRY_TO_EMAIL
-        sync: false
-      - key: INQUIRY_FROM_EMAIL
+      - key: WEBSITE_SUBMISSION_KEY
         sync: false

@@ -11,9 +11,10 @@ async function forward(request: NextRequest, context: Context, method: "GET"|"PO
   const { path } = await context.params;
   const key = path.join("/");
   const safeTicketId = /^tickets\/[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(key);
-  const permitted = (method === "GET" && ["me", "overview", "projects", "tickets"].includes(key)) ||
+  const safeInquiryId = /^inquiries\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(key);
+  const permitted = (method === "GET" && ["me", "overview", "projects", "tickets", "inquiries"].includes(key)) ||
     (method === "POST" && ["projects", "tickets"].includes(key)) ||
-    (method === "PATCH" && safeTicketId);
+    (method === "PATCH" && (safeTicketId || safeInquiryId));
   if (!permitted) return json({ detail: "Not found." }, 404);
   const backendPath = key === "me" ? "/api/auth/me/" : `/api/portal/${key}/`;
   let payload: string | undefined;

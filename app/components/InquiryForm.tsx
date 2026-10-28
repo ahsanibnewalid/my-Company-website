@@ -13,6 +13,7 @@ type Props = {
 export default function InquiryForm({ kind, track = "Junior Student Intern", onTrackChange }: Props) {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [reference, setReference] = useState("");
   const [error, setError] = useState("");
   useEffect(() => { setSent(false); setError(""); }, [track]);
 
@@ -38,10 +39,12 @@ export default function InquiryForm({ kind, track = "Junior Student Intern", onT
           consent: data.get("consent") === "on",
         }),
       });
-      const result = await response.json() as { ok?: boolean; error?: string };
+      const result = await response.json() as { ok?: boolean; error?: string; reference?: string };
       if (!response.ok || !result.ok) {
-        throw new Error(result.error || "The request could not be delivered.");
+        throw new Error(result.error || "The request could not be saved.");
       }
+      if (!result.reference) throw new Error("The request was not confirmed as saved.");
+      setReference(result.reference);
       setSent(true);
       form.reset();
     } catch (cause) {
@@ -54,9 +57,10 @@ export default function InquiryForm({ kind, track = "Junior Student Intern", onT
   if (sent) {
     return <div className="success-state" role="status">
       <span><Check/></span>
-      <b>Message sent</b>
-      <p>Thanks for getting in touch. Your message was delivered to our team. We'll review it and reply if there's a suitable next step.</p>
-      <button className="btn btn-outline" type="button" onClick={() => setSent(false)}>Send another message</button>
+      <b>Request received</b>
+      <p>Thanks for getting in touch. Your request is saved in our company system for review. We may reply by email if there's a suitable next step.</p>
+      <p>Reference: <strong>{reference}</strong></p>
+      <button className="btn btn-outline" type="button" onClick={() => setSent(false)}>Send another request</button>
     </div>;
   }
 
@@ -86,8 +90,8 @@ export default function InquiryForm({ kind, track = "Junior Student Intern", onT
     </label>
     {error && <p className="form-error" role="alert">{error}</p>}
     <button className="btn btn-primary" type="submit" disabled={sending}>
-      {sending ? "Sending…" : kind === "project" ? "Send project inquiry" : "Send application"} <ArrowRight size={16}/>
+      {sending ? "Submitting…" : kind === "project" ? "Submit project inquiry" : "Submit application"} <ArrowRight size={16}/>
     </button>
-    <p className="form-privacy">Messages are sent to the company inbox only when email delivery is configured; this form does not create an account.</p>
+    <p className="form-privacy">Requests are securely stored in the company database after confirmation. No email delivery provider is used; this form does not create an account.</p>
   </form>;
 }
