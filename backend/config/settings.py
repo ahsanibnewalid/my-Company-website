@@ -1,12 +1,23 @@
 from datetime import timedelta
 from pathlib import Path
 import os
+from django.core.exceptions import ImproperlyConfigured
 import environ
 BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env(DEBUG=(bool, False))
 environ.Env.read_env(BASE_DIR / ".env")
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 DEBUG = env("DJANGO_DEBUG")
+if not DEBUG:
+    jwt_key = env("JWT_SIGNING_KEY")
+    if (
+        len(SECRET_KEY) < 32 or len(jwt_key) < 32
+        or "replace-with" in SECRET_KEY or "replace-with" in jwt_key
+        or jwt_key == SECRET_KEY
+    ):
+        raise ImproperlyConfigured(
+            "Production requires distinct, high-entropy Django and JWT signing keys."
+        )
 ALLOWED_HOSTS = [x.strip() for x in env("DJANGO_ALLOWED_HOSTS", default="localhost").split(",") if x.strip()]
 DATABASES = {"default": (
     {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "db.sqlite3"}
