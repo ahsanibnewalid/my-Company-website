@@ -2,9 +2,16 @@
 name = "axiom-labs-platform-api"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = ["Django>=5.2,<5.3", "djangorestframework>=3.16,<3.17", "djangorestframework-simplejwt>=5.5,<6", "psycopg[binary]>=3.2,<4", "django-environ>=0.12,<1", "django-otp>=1.6,<2", "pyotp>=2.9,<3", "gunicorn>=23,<24"]
+dependencies = ["Django>=5.2,<5.3", "djangorestframework>=3.16,<3.17", "djangorestframework-simplejwt>=5.5,<6", "psycopg[binary]>=3.2,<4", "django-environ>=0.12,<1", "django-otp>=1.6,<2", "pyotp>=2.9,<3", "gunicorn>=23,<24", "whitenoise>=6.9,<7"]
 [project.optional-dependencies]
 dev = ["pytest>=8.3", "pytest-django>=4.11", "ruff>=0.11", "bandit>=1.8"]
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["config*", "platform_core*"]

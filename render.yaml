@@ -11,6 +11,8 @@ services:
     envVars:
       - key: NODE_VERSION
         value: 24.21.0
+      - key: DJANGO_API_URL
+        sync: false
       - key: RESEND_API_KEY
         sync: false
       - key: INQUIRY_TO_EMAIL
