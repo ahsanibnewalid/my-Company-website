@@ -131,3 +131,35 @@ class SupportTicket(models.Model):
     class Meta:
         ordering = ["-created_at"]
         indexes = [models.Index(fields=["tenant", "status"])]
+
+
+class PublicInquiry(models.Model):
+    """A public project inquiry or career application, never an account or tenant record."""
+
+    class Kind(models.TextChoices):
+        PROJECT = "project", "Project inquiry"
+        CAREER = "career", "Career application"
+
+    class Status(models.TextChoices):
+        NEW = "new", "New"
+        REVIEWING = "reviewing", "Reviewing"
+        CLOSED = "closed", "Closed"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    kind = models.CharField(max_length=12, choices=Kind.choices)
+    status = models.CharField(max_length=12, choices=Status.choices, default=Status.NEW)
+    name = models.CharField(max_length=100)
+    email = models.EmailField(max_length=254)
+    organization = models.CharField(max_length=120, blank=True)
+    track = models.CharField(max_length=80, blank=True)
+    message = models.TextField()
+    consent_at = models.DateTimeField(default=timezone.now, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["kind", "-created_at"], name="inquiry_kind_received_idx"),
+            models.Index(fields=["status", "-created_at"], name="inquiry_status_received_idx"),
+        ]

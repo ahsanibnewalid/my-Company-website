@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import AuditLog, Membership, Project, Subscription, SupportTicket, Tenant, User
+from .models import AuditLog, Membership, Project, PublicInquiry, Subscription, SupportTicket, Tenant, User
 from .permissions import IsPortalAuthenticated
 
 
@@ -53,6 +53,8 @@ class PortalOverviewView(APIView):
                     "users": User.objects.count(),
                     "projects": Project.objects.count(),
                     "open_tickets": SupportTicket.objects.filter(status=SupportTicket.Status.OPEN).count(),
+                    "inquiries": PublicInquiry.objects.count(),
+                    "new_inquiries": PublicInquiry.objects.filter(status=PublicInquiry.Status.NEW).count(),
                 },
                 "workspaces": [{
                     "id": str(t.id), "name": t.name, "status": t.status,

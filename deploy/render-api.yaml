@@ -21,6 +21,8 @@ services:
         sync: false
       - key: JWT_SIGNING_KEY
         sync: false
+      - key: WEBSITE_SUBMISSION_KEY
+        sync: false
       - key: DATABASE_URL
         sync: false
       - key: DJANGO_ALLOWED_HOSTS

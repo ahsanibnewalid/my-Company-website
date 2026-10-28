@@ -70,3 +70,39 @@ The backend is **not automatically deployed** by the frontend's Render blueprint
 - Rate limiting defaults to a Django process-local cache; use a shared cache or managed edge limiter in production.
 - Email invitations, account self-service recovery, WebAuthn/hardware MFA, detailed privacy retention, and financial-provider integration require separate configured services and policy.
 - Audit records are persisted but not cryptographically immutable. Privileged access needs operational review.
+
+
+## Database-backed website inquiries (replaces Resend)
+
+Public project and career forms now reach Django through the Next.js server,
+not through an email delivery service:
+
+1. The browser POSTs to Next.js `/api/inquiries`, which validates the form,
+   applies a basic per-instance abuse throttle, and forwards the validated data.
+2. Next.js authenticates its request to Django's `/api/inquiries/submit/`
+   with the server-only `X-Website-Submission-Key` header.
+3. Django validates again and stores a `PublicInquiry` record in PostgreSQL.
+   The browser receives a short reference **only after a successful database write**.
+4. The authenticated owner sees the queue in `/portal`, can mark records
+   new/reviewing/closed, and can use the OTP-protected Django `/admin/`
+   for complete history and deletion. Status changes are recorded in `AuditLog`.
+
+Set **the same long, random `WEBSITE_SUBMISSION_KEY`** in the Render environment
+of the Next.js service and the Django service. Never use a `NEXT_PUBLIC_` prefix
+and never commit its production value. The Django endpoint denies writes
+without the correct secret; if the API, key, or database is unavailable, the
+public form shows a failure rather than claiming success.
+
+Development: put the same `WEBSITE_SUBMISSION_KEY` in
+`backend/.env` and the repository root `.env.local` (both ignored).
+Generate a value with `python -c 'import secrets; print(secrets.token_urlsafe(48))'`.
+Then run Django migrations and restart both services.
+
+The submissions are not linked to tenant accounts. Only superusers with
+MFA-verified sessions can list/update them from the portal; clients cannot.
+Database backups, account provisioning, a retention/deletion policy, and
+managed rate limiting still need to be configured before accepting real
+production personal information. No automatic notification emails are sent.
+
+Run `python manage.py test platform_core` for submission authorization,
+validation, owner review, audit events, and the existing portal security tests.

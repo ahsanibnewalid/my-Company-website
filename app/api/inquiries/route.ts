@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { validateInquiry } from "@/lib/inquiry";
+import { djangoFetch, requestIsSameOrigin } from "@/lib/portal-auth";
 
 export const runtime = "nodejs";
 
@@ -30,11 +31,9 @@ function tooManyAttempts(key: string): boolean {
 }
 
 export async function POST(request: NextRequest) {
-  const origin = request.headers.get("origin");
-  if (origin && origin !== request.nextUrl.origin) {
+  if (!requestIsSameOrigin(request)) {
     return respond({ error: "Requests must originate from this website." }, 403);
   }
-
   const length = Number(request.headers.get("content-length") || 0);
   if (!Number.isFinite(length) || length > 12000) {
     return respond({ error: "Your message is too long." }, 413);
@@ -52,21 +51,20 @@ export async function POST(request: NextRequest) {
   if (input && typeof input === "object" && !Array.isArray(input) &&
       typeof (input as Record<string, unknown>).website === "string" &&
       (input as Record<string, unknown>).website) {
-    // Honeypot: quietly accept bot submissions without sending email.
+    // Honeypot: quietly acknowledge bot submissions without saving them.
     return respond({ ok: true }, 200);
   }
 
   const checked = validateInquiry(input);
   if (!checked.ok) return respond({ error: checked.error }, 400);
 
-  const apiKey = process.env.RESEND_API_KEY;
-  const inbox = process.env.INQUIRY_TO_EMAIL;
-  const from = process.env.INQUIRY_FROM_EMAIL;
-  if (!apiKey || !inbox || !from) {
-    return respond({ error: "Messages are not enabled yet. Please try again later." }, 503);
+  const submissionKey = process.env.WEBSITE_SUBMISSION_KEY;
+  if (!submissionKey) {
+    return respond({ error: "The inquiry service is not available yet. Please try again later." }, 503);
   }
 
-  // Best-effort per-instance throttle; use a managed edge rate limit for production.
+  // This process-local throttle is a secondary safeguard, not a substitute for
+  // managed rate limiting across Render instances.
   const ip = request.headers.get("cf-connecting-ip") ||
     request.headers.get("x-real-ip") ||
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
@@ -74,46 +72,27 @@ export async function POST(request: NextRequest) {
     return respond({ error: "Too many messages. Please try again in 15 minutes." }, 429);
   }
 
-  const inquiry = checked.data;
-  const subject = inquiry.kind === "project"
-    ? "Axiom Labs — new project inquiry"
-    : "Axiom Labs — new career application";
-  const message = [
-    `Type: ${inquiry.kind}`,
-    `Name: ${inquiry.name}`,
-    `Email: ${inquiry.email}`,
-    `Organization: ${inquiry.organization || "Not provided"}`,
-    ...(inquiry.kind === "career" ? [`Track: ${inquiry.track}`] : []),
-    "",
-    inquiry.message,
-    "",
-    "Submitted from the Axiom Labs website. Consent to reply: yes.",
-  ].join("\n");
-
-  try {
-    const delivery = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      signal: AbortSignal.timeout(10000),
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from,
-        to: [inbox],
-        reply_to: inquiry.email,
-        subject,
-        text: message,
-      }),
-      cache: "no-store",
-    });
-    if (!delivery.ok) {
-      console.error("Inquiry email provider returned status", delivery.status);
-      return respond({ error: "We couldn't deliver your message. Please try again later." }, 502);
-    }
-    return respond({ ok: true }, 200);
-  } catch {
-    console.error("Inquiry email provider was unavailable");
-    return respond({ error: "We couldn't deliver your message. Please try again later." }, 502);
+  const upstream = await djangoFetch("/api/inquiries/submit/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Website-Submission-Key": submissionKey,
+    },
+    body: JSON.stringify({ ...checked.data, consent: true }),
+  });
+  if (!upstream) {
+    return respond({ error: "The inquiry service is currently unavailable. Please try again later." }, 503);
   }
+  if (!upstream.ok) {
+    if (upstream.status === 400) {
+      return respond({ error: "Please check your form details and try again." }, 400);
+    }
+    return respond({ error: "Your request could not be saved. Please try again later." }, 502);
+  }
+
+  const result = await upstream.json().catch(() => null) as { ok?: boolean; reference?: string } | null;
+  if (!result?.ok || !result.reference) {
+    return respond({ error: "We could not verify the saved request. Please try again later." }, 502);
+  }
+  return respond({ ok: true, reference: result.reference }, 201);
 }
