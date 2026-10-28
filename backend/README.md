@@ -51,7 +51,7 @@ python manage.py check
 python manage.py test platform_core -v 2
 ```
 
-GitHub Actions checks authentication, TOTP enforcement and tenant scoping. The initial model migration must be committed before production deployment; the CI workflow temporarily generates it while verifying the first implementation.
+GitHub Actions checks authentication, TOTP enforcement and tenant scoping. The initial model migration is committed. CI checks migration consistency before running Django tests.
 
 ## Production activation — required
 

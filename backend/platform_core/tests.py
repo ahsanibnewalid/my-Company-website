@@ -1,4 +1,5 @@
 import pyotp
+from django.core.cache import cache
 from django.test import TestCase
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from rest_framework.test import APIClient
@@ -7,6 +8,7 @@ from platform_core.models import Membership, Project, Role, SupportTicket, Tenan
 
 class PortalAuthTests(TestCase):
     def setUp(self):
+        cache.clear()  # Isolate login throttle state across tests.
         self.client_api = APIClient()
         self.owner = User.objects.create_superuser(
             username="owner", email="owner@example.com", password="OwnerPasswordForTests123!"

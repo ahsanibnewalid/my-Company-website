@@ -23,12 +23,10 @@ jobs:
           python-version: "3.12"
       - name: Install Django backend dependencies
         run: python -m pip install -e './backend[dev]'
-      - name: Show initial migration for review
-        run: python backend/manage.py makemigrations platform_core --dry-run --verbosity 3
+      - name: Check committed migrations
+        run: python backend/manage.py makemigrations --check --dry-run
       - name: Prepare test database
-        run: |
-          python backend/manage.py makemigrations platform_core --noinput
-          python backend/manage.py migrate --noinput
+        run: python backend/manage.py migrate --noinput
       - name: Validate configuration
         run: python backend/manage.py check
       - name: Auth, MFA and cross-tenant tests
