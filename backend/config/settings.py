@@ -56,3 +56,10 @@ SIMPLE_JWT = {"ACCESS_TOKEN_LIFETIME": timedelta(minutes=env.int("ACCESS_TOKEN_M
 
 # Shared server-to-server secret; never expose it in NEXT_PUBLIC_ variables.
 WEBSITE_SUBMISSION_KEY = env("WEBSITE_SUBMISSION_KEY", default="")
+
+# Explicit owner allowlist. Empty means no one can enter company administration.
+ADMIN_ALLOWED_EMAILS = {
+    email.strip().lower()
+    for email in env("ADMIN_ALLOWED_EMAILS", default="").split(",")
+    if email.strip()
+}

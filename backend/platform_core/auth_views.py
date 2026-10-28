@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import AuditLog, Membership
-from .permissions import requires_mfa
+from .permissions import is_predefined_admin, requires_mfa
 from .serializers import MeSerializer
 
 
@@ -27,6 +27,7 @@ class LoginEmailThrottle(SimpleRateThrottle):
 
 
 class LoginView(APIView):
+    admin_only = False
     authentication_classes = []
     permission_classes = [AllowAny]
     throttle_classes = [LoginEmailThrottle]
@@ -41,6 +42,11 @@ class LoginView(APIView):
 
         user = authenticate(request, username=email, password=password)
         if user is None or not user.is_active:
+            return Response(invalid, status=status.HTTP_401_UNAUTHORIZED)
+        if self.admin_only and not is_predefined_admin(user):
+            return Response(invalid, status=status.HTTP_401_UNAUTHORIZED)
+        # Owners must use the dedicated admin endpoint, not the member login.
+        if user.is_superuser and (not self.admin_only or not is_predefined_admin(user)):
             return Response(invalid, status=status.HTTP_401_UNAUTHORIZED)
 
         if not user.is_superuser and not Membership.objects.filter(
@@ -62,13 +68,18 @@ class LoginView(APIView):
         refresh = RefreshToken.for_user(user)
         refresh["mfa_verified"] = requires_mfa(user)
         AuditLog.objects.create(
-            actor=user, action="auth.portal.login", target_type="user", target_id=str(user.pk)
+            actor=user, action="auth.admin.login" if self.admin_only else "auth.portal.login", target_type="user", target_id=str(user.pk)
         )
         return Response({
             "access": str(refresh.access_token),
             "refresh": str(refresh),
             "user": MeSerializer(user).data,
         })
+
+
+class AdminLoginView(LoginView):
+    """The same password + TOTP flow, restricted to predefined active owners."""
+    admin_only = True
 
 
 class LogoutView(APIView):

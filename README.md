@@ -19,7 +19,9 @@ projects and support tickets, and a protected owner review dashboard.
 ## Company backend
 
 - Django auth with JWT access/refresh and MFA for privileged accounts.
-- Owner, staff and client role boundaries; tenant-isolated project/support APIs.
+- Predefined-owner-only `/admin` login with enforced email allowlist, mandatory TOTP and protected management API; separate staff/client access.
+- Owner can create and activate organizations, create member accounts, assign roles, deactivate non-owner accounts and manage project/support/inquiry workflows.
+- Staff and client role boundaries; tenant-isolated project/support APIs.
 - Public submissions kept separate from client tenants. Only a superuser with
   a valid MFA-verified session can review/change them via the owner portal.
 - OTP-protected Django admin for account provisioning, inquiry review and operations.
@@ -39,6 +41,7 @@ cp .env.example .env
 # Set WEBSITE_SUBMISSION_KEY to a long random private value.
 python manage.py migrate
 python manage.py seed_roles
+# Set ADMIN_ALLOWED_EMAILS in backend/.env to your chosen owner email first.
 python manage.py createsuperuser
 python manage.py enroll_totp --email YOUR_OWNER_EMAIL
 python manage.py runserver
@@ -53,7 +56,8 @@ npm run dev
 ```
 
 Open http://localhost:3000 for the public site or
-http://localhost:3000/login for the company portal.
+http://localhost:3000/login for staff/client access, or
+http://localhost:3000/admin for predefined-owner administration.
 Django development defaults to http://127.0.0.1:8000.
 See [backend/README.md](backend/README.md) for account/member provisioning
 and security details.
@@ -67,11 +71,11 @@ The two components are independent services:
 2. The optional `deploy/render-api.yaml` deploys Django. First create a
    managed PostgreSQL database with backups and set `DATABASE_URL`,
    `DJANGO_ALLOWED_HOSTS`, `DJANGO_CSRF_TRUSTED_ORIGINS`,
-   `DJANGO_SECRET_KEY`, and `JWT_SIGNING_KEY` securely.
+   `DJANGO_SECRET_KEY`, `JWT_SIGNING_KEY` and `ADMIN_ALLOWED_EMAILS` securely.
 3. Set the **same** long, random server-only `WEBSITE_SUBMISSION_KEY` in
    both services. Never expose it through `NEXT_PUBLIC_` variables.
 4. Apply migrations (including `0002_publicinquiry`), seed roles, create
-   the owner and enroll TOTP from a private backend management shell.
+   the owner using an email listed in `ADMIN_ALLOWED_EMAILS` and enroll TOTP from a private backend management shell.
 5. Verify database health at `/api/health/` on the Django service; verify a
    real public submission and its appearance in the owner portal. Check
    failed submissions do not show a success message.
